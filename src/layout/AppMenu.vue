@@ -135,6 +135,41 @@ const model = ref([
                 target: '_blank'
             }
         ]
+    },
+    {
+        label: "Logjistika",
+        items: [
+            {
+                label: "Dërgesat",
+                icon: 'pi pi-fw pi-car',
+                to: '/logistics/orders'
+            }
+        ]
+    },
+    {
+        label: "Administrimi",
+        items: [
+            {
+                label: "Shtetet",
+                icon: 'pi pi-fw pi-globe',
+                to: '/administration/countries'
+            },
+            {
+                label: "Qytetet",
+                icon: 'pi pi-fw pi-globe',
+                to: '/administration/cities'
+            },
+            {
+                label: "Rolet",
+                icon: "pi pi-fw pi-users",
+                to: '/administration/roles'
+            },
+            {
+                label: "Përdoruesit",
+                icon: "pi pi-fw pi-user-plus",
+                to: '/administration/users'
+            }
+        ]
     }
 ]);
 </script>

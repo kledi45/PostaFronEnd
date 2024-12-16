@@ -1,43 +1,50 @@
 import axios from 'axios';
-
+import { useCookies } from 'vue3-cookies';
+const { cookies } = useCookies();
 const apiClient = axios.create({
-    baseURL: 'https://localhost:7246/api',
-    headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-    },
+  baseURL: 'https://localhost:7246/api',
+  headers: { 'Content-Type': 'application/json' },
+  withCredentials: true,
 });
 
 apiClient.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem('authToken');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-    },
-    (error) => Promise.reject(error)
+  (config) => {
+    const token = cookies.get('authToken');
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
 );
 
 apiClient.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        console.error('API Error:', error);
-        return Promise.reject(error);
-    }
+  (response) => response,
+  (error) => {
+    console.error('API Error:', error);
+    return Promise.reject(error);
+  }
 );
 
 export default {
-    get(url, params = {}) {
-        return apiClient.get(url, { params });
-    },
-    post(url, data) {
-        return apiClient.post(url, data);
-    },
-    put(url, data) {
-        return apiClient.put(url, data);
-    },
-    delete(url) {
-        return apiClient.delete(url);
-    },
+  get(url, params = {}) {
+    return apiClient.get(url, { params });
+  },
+  post(url, params) {
+    const formData = new FormData();
+
+    // Check if params is an object and populate FormData
+    if (params && typeof params === 'object') {
+      Object.entries(params).forEach(([key, value]) => {
+        formData.append(key, value);
+      });
+    }
+    return apiClient.post(url, params);
+  },
+  put(url, params = {}) {
+    return apiClient.put(url, { params });
+  },
+  delete(url, params = {}) {
+    return apiClient.delete(url, { params });
+  },
 };

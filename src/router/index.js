@@ -1,12 +1,15 @@
 import AppLayout from '@/layout/AppLayout.vue';
 import { createRouter, createWebHistory } from 'vue-router';
+import { useCookies } from 'vue3-cookies';
 
+const { cookies } = useCookies(); // Access cookies using the hook
 const router = createRouter({
     history: createWebHistory(),
     routes: [
         {
             path: '/',
             component: AppLayout,
+            meta: { requiresAuth: true },
             children: [
                 {
                     path: '/',
@@ -103,6 +106,31 @@ const router = createRouter({
                     path: '/documentation',
                     name: 'documentation',
                     component: () => import('@/views/pages/Documentation.vue')
+                },
+                {
+                    path: '/administration/countries',
+                    name: "countries",
+                    component: () => import("@/views/pages/Administration/Countries.vue")
+                },
+                {
+                    path: '/administration/cities',
+                    name: "cities",
+                    component: () => import("@/views/pages/Administration/Cities.vue")
+                },
+                {
+                    path: '/administration/roles',
+                    name: "roles",
+                    component: () => import("@/views/pages/Administration/Roles.vue")
+                },
+                {
+                    path: '/administration/users',
+                    name: "users",
+                    component: () => import("@/views/pages/Administration/UsersList.vue")
+                },
+                {
+                    path: '/logistics/orders',
+                    name: "orders",
+                    component: () => import("@/views/pages/Logistics/Orders.vue")
                 }
             ]
         },
@@ -131,8 +159,32 @@ const router = createRouter({
             path: '/auth/error',
             name: 'error',
             component: () => import('@/views/pages/auth/Error.vue')
-        }
+        },
+
     ]
 });
+
+
+
+router.beforeEach((to, from, next) => {
+    const authToken = cookies.get('authToken');
+    console.log(from)
+    if (to.meta.requiresAuth) {
+        if (!authToken) {
+            next('/auth/login');
+        }
+        else {
+            console.log('Auth token found, proceeding to route');
+            next();
+        }
+    }
+    else if (authToken != null && to.name == "login") {
+        next(from.fullPath);
+    }
+    else {
+        next();
+    }
+});
+
 
 export default router;
