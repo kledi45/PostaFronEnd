@@ -136,6 +136,11 @@ const router = createRouter({
                     path: '/logistics/orders',
                     name: "orders",
                     component: () => import("@/views/pages/Logistics/Orders.vue")
+                },
+                {
+                    path: '/logistics/advancedsearch',
+                    name: "advancedsearch",
+                    component: () => import("@/views/pages/Logistics/AdvancedSearch.vue")
                 }
             ]
         },

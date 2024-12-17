@@ -198,6 +198,7 @@ async function getShipments() {
     const response = await ApiService.get("Shipments/getShipments");
     const shipmentsList = new ApiResponse(response.data.statusCode, response.data.result, '');
     products.value = shipmentsList.result;
+    debugger
 }
 
 async function getClients() {
@@ -206,6 +207,11 @@ async function getClients() {
     clients.value = clientsList.result;
 }
 
+async function getUsers() {
+    const response = await ApiService.get("Users/getUsers");
+    const usersList = new ApiResponse(response.data.statusCode, response.data.result, '');
+    products.value = usersList.result;
+}
 
 async function getCountries() {
     const response = await ApiService.get("Countries/getCountries");
