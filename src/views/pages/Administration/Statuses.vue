@@ -3,7 +3,7 @@
         <div class="card">
             <Toolbar class="mb-6">
                 <template #start>
-                    <Button label="Shto rol të ri" icon="pi pi-plus" severity="secondary" class="mr-2"
+                    <Button label="Shto status të ri" icon="pi pi-plus" severity="secondary" class="mr-2"
                         @click="openNew" />
 
                 </template>
@@ -17,7 +17,7 @@
                 :rows="10" :filters="filters"
                 paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                 :rowsPerPageOptions="[5, 10, 25]"
-                currentPageReportTemplate="Duke shfaqur {first} deri {last} nga {totalRecords} role">
+                currentPageReportTemplate="Duke shfaqur {first} deri {last} nga {totalRecords} stause">
                 <template #header>
                     <div class="flex flex-wrap gap-2 items-center justify-between">
                         <h4 class="m-0">Lista e shteteve</h4>
@@ -31,7 +31,7 @@
                 </template>
 
                 <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
-                <Column field="title" header="Titulli" sortable style="min-width: 16rem"></Column>
+                <Column field="name" header="Titulli" sortable style="min-width: 16rem"></Column>
                 <Column :exportable="false" style="min-width: 12rem">
                     <template #body="slotProps">
                         <Button icon="pi pi-pencil" outlined rounded class="mr-2"
@@ -43,13 +43,13 @@
             </DataTable>
         </div>
 
-        <Dialog v-model:visible="productDialog" :style="{ width: '450px' }" header="Detajet e rolit" :modal="true">
+        <Dialog v-model:visible="productDialog" :style="{ width: '450px' }" header="Detajet e statusit" :modal="true">
             <div class="flex flex-col gap-6">
                 <div>
-                    <label for="title" class="block font-bold mb-3">Titulli</label>
-                    <InputText id="title" v-model.trim="product.title" required="true" autofocus
-                        :invalid="submitted && !product.title" fluid />
-                    <small v-if="submitted && !product.title" class="text-red-500">Titulli është i domësdoshëm.</small>
+                    <label for="name" class="block font-bold mb-3">Titulli</label>
+                    <InputText id="name" v-model.trim="product.name" required="true" autofocus
+                        :invalid="submitted && !product.name" fluid />
+                    <small v-if="submitted && !product.name" class="text-red-500">Titulli është i domësdoshëm.</small>
                 </div>
             </div>
 
@@ -86,9 +86,9 @@ onMounted(() => {
 });
 
 async function getRoles() {
-    const response = await ApiService.get("Roles/getRoles");
-    const countriesList = new ApiResponse(response.data.statusCode, response.data.result, '');
-    products.value = countriesList.result;
+    const response = await ApiService.get("Statuses/getStatuses");
+    const statusesList = new ApiResponse(response.data.statusCode, response.data.result, '');
+    products.value = statusesList.result;
 }
 const toast = useToast();
 const dt = ref();
@@ -120,13 +120,13 @@ async function saveProduct() {
     submitted.value = true;
     const data = {
         Id: roleId,
-        Title: product.value.title,
+        Name: product.value.name,
     };
 
-    const response = await ApiService.post(roleId == 0 ? "Roles/CreateRole" : "Roles/EditRole", data);
+    const response = await ApiService.post(roleId == 0 ? "Statuses/CreateStatus" : "Statuses/EditStatus", data);
     const apiResponse = new ApiResponse(response.data.statusCode, response.data.result, '');
     if (apiResponse.statusCode == 0)
-        toast.add({ severity: 'success', summary: 'Sukses', detail: roleId == 0 ? 'Roli u shtua me sukses' : "Roli u përditësua me sukses", life: 3000 });
+        toast.add({ severity: 'success', summary: 'Sukses', detail: roleId == 0 ? 'Statusi u shtua me sukses' : "Statusi u përditësua me sukses", life: 3000 });
     else
         toast.add({ severity: 'warn', summary: 'Gabim', detail: 'Një gabim ka ndodhur!', life: 3000 });
 

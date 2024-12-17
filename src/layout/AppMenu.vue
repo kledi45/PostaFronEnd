@@ -160,6 +160,11 @@ const model = ref([
                 to: '/administration/cities'
             },
             {
+                label: "Statuset",
+                icon: "pi pi-fw pi-sort-alpha-down-alt ",
+                to: "/administration/statuses"
+            },
+            {
                 label: "Rolet",
                 icon: "pi pi-fw pi-users",
                 to: '/administration/roles'

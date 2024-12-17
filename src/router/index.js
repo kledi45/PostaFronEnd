@@ -128,6 +128,11 @@ const router = createRouter({
                     component: () => import("@/views/pages/Administration/UsersList.vue")
                 },
                 {
+                    path: '/administration/statuses',
+                    name: "statuses",
+                    component: () => import("@/views/pages/Administration/Statuses.vue")
+                },
+                {
                     path: '/logistics/orders',
                     name: "orders",
                     component: () => import("@/views/pages/Logistics/Orders.vue")

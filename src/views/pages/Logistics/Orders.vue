@@ -37,7 +37,11 @@
                 <Column field="phoneNumber" header="Numri i telefonit" sortable style="min-width: 16rem"></Column>
                 <Column field="country" header="Shteti" sortable style="min-width: 16rem"></Column>
                 <Column field="city" header="Qyteti" sortable style="min-width: 16rem"></Column>
-                <Column field="canBeOpened" header="Mund të hapet" sortable style="min-width: 16rem"></Column>
+                <Column field="canBeOpened" header="Mund të hapet" sortable style="min-width: 12rem">
+                    <template #body="slotProps">
+                        {{ getStatusLabel(slotProps.data.canBeOpened) }}
+                    </template>
+                </Column>
                 <Column field="itemDescription" header="Përshkrimi i artikullit" sortable style="min-width: 16rem">
                 </Column>
                 <Column field="extraItemDescription" header="Përshkrimi ekstra i artikullit" sortable
@@ -59,7 +63,7 @@
             </DataTable>
         </div>
 
-        <Dialog v-model:visible="productDialog" :style="{ width: '450px' }" header="Detajet e dërgesës" :modal="true">
+        <Dialog v-model:visible="productDialog" :style="{ width: '450px' }" header="Product Details" :modal="true">
             <div class="flex flex-col gap-6">
                 <div class="user-form">
                     <div>
@@ -184,7 +188,6 @@ import { FilterMatchMode } from '@primevue/core/api';
 import { useToast } from 'primevue/usetoast';
 import { onMounted, ref } from 'vue';
 onMounted(() => {
-    getUsers();
     getCountries();
     getRoles();
     getClients();
@@ -203,11 +206,6 @@ async function getClients() {
     clients.value = clientsList.result;
 }
 
-async function getUsers() {
-    const response = await ApiService.get("Users/getUsers");
-    const usersList = new ApiResponse(response.data.statusCode, response.data.result, '');
-    products.value = usersList.result;
-}
 
 async function getCountries() {
     const response = await ApiService.get("Countries/getCountries");
@@ -235,12 +233,10 @@ const clients = ref();
 
 const productDialog = ref(false);
 const deleteProductDialog = ref(false);
-const deleteProductsDialog = ref(false);
 const countries = ref({});
 const product = ref({});
 const roles = ref({});
 const cities = ref({});
-const shipments = ref({});
 
 
 const selectedProducts = ref();
@@ -262,6 +258,9 @@ function hideDialog() {
     userId = 0;
 }
 
+function getStatusLabel(canBeOpened) {
+    return canBeOpened ? 'Po' : "Jo";
+}
 
 async function saveProduct() {
     submitted.value = true;
@@ -292,6 +291,7 @@ async function saveProduct() {
         Total: parseFloat(product.value.total) || 0,
         PhoneNumber: product.value.phoneNumber
     };
+
     const response = await ApiService.post(userId == 0 ? "Shipments/CreateShipment" : "Shipments/EditShipment", data);
     const apiResponse = new ApiResponse(response.data.statusCode, response.data.result, '');
     if (apiResponse.statusCode == 0)
@@ -302,11 +302,10 @@ async function saveProduct() {
     productDialog.value = false;
     submitted.value = false;
     userId = 0;
-    getUsers();
+    getShipments();
 }
 
 function editProduct(prod) {
-    console.log(prod)
     product.value = { ...prod };
     productDialog.value = true;
     userId = product.value.id;
@@ -330,7 +329,7 @@ async function deleteProduct(id) {
         toast.add({ severity: 'warn', summary: 'Gabim', detail: 'Një gabim ka ndodhur!', life: 3000 });
 
     deleteProductDialog.value = false;
-    getUsers();
+    getShipments();
 }
 
 
