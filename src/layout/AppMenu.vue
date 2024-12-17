@@ -143,6 +143,11 @@ const model = ref([
                 label: "Dërgesat",
                 icon: 'pi pi-fw pi-car',
                 to: '/logistics/orders'
+            },
+            {
+                label: "Kërkim i avancuar",
+                icon: 'pi pi-fw pi-search',
+                to: '/logistics/advancedsearch'
             }
         ]
     },
