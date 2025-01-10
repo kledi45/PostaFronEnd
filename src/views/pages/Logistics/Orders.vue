@@ -31,6 +31,13 @@
                 </template>
 
                 <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
+                <Column field="uniqueIdentifier" header="ID Dërgesës" sortable style="min-width: 16rem"></Column>
+                <Column field="status" header="Statusi" sortable style="min-width: 16rem"></Column>
+                <Column field="deliveryDate" header="Data e dorëzimit" sortable style="min-width: 16rem;">
+                    <template #body="slotProps">
+                        {{ formatDate(slotProps.data.deliveryDate) }}
+                    </template>
+                </Column>
                 <Column field="client" header="Klienti" sortable style="min-width: 16rem"></Column>
                 <Column field="receiver" header="Pranuesi" sortable style="min-width: 16rem"></Column>
                 <Column field="address" header="Adresa" sortable style="min-width: 16rem"></Column>
@@ -50,8 +57,7 @@
                 <Column field="productPrice" header="Cmimi i produktit" sortable style="min-width: 16rem"></Column>
                 <Column field="serviceCost" header="Kosto e shërbimit" sortable style="min-width: 16rem"></Column>
                 <Column field="total" header="Totali" sortable style="min-width: 16rem"></Column>
-
-
+                <Column field="idStatus" header="Totali" sortable style="display:none !important"></Column>
                 <Column :exportable="false" style="min-width: 12rem">
                     <template #body="slotProps">
                         <Button icon="pi pi-pencil" outlined rounded class="mr-2"
@@ -63,7 +69,7 @@
             </DataTable>
         </div>
 
-        <Dialog v-model:visible="productDialog" :style="{ width: '450px' }" header="Product Details" :modal="true">
+        <Dialog v-model:visible="productDialog" :style="{ width: '450px' }" header="Detajet e dërgesës" :modal="true">
             <div class="flex flex-col gap-6">
                 <div class="user-form">
                     <div>
@@ -119,6 +125,14 @@
                         <input type="checkbox" id="canBeOpened" v-model="product.canBeOpened" autofocus />
                     </div>
                     <div>
+                        <label for="postman" class="block font-bold mb-3">Postieri</label>
+                        <Select id="idPostman" v-model="product.idPostman" :options="postmans" optionLabel="fullName"
+                            optionValue="id" placeholder="Zgjedh postierin" required="true" fluid></Select>
+                        <small v-if="submitted && !product.idPostman" class="text-red-500">
+                            Postieri është i domësdoshëm.
+                        </small>
+                    </div>
+                    <div>
                         <label for="itemDescription" class="block font-bold mb-3">Përshkrimi i artikullit</label>
                         <Textarea type="text" id="itemDescription" v-model.trim="product.itemDescription"
                             required="true" autofocus :invalid="submitted && !product.itemDescription" fluid />
@@ -135,7 +149,8 @@
                     <div>
                         <label for="productPrice" class="block font-bold mb-3">Cmimi i artikullit</label>
                         <InputText type="number" id="productPrice" v-model.trim="product.productPrice" required="false"
-                            autofocus :invalid="submitted && !product.productPrice" fluid />
+                            autofocus :invalid="submitted && !product.productPrice" fluid
+                            @change="handleTotalChange()" />
                         <small v-if="submitted && !product.productPrice" class="text-red-500">Cmimi i artikullit
                             është i
                             domësdoshëm.</small>
@@ -143,19 +158,30 @@
                     <div>
                         <label for="serviceCost" class="block font-bold mb-3">Cmimi i shërbimit</label>
                         <InputText type="number" id="serviceCost" v-model.trim="product.serviceCost" required="false"
-                            autofocus :invalid="submitted && !product.serviceCost" fluid />
+                            autofocus :invalid="submitted && !product.serviceCost" fluid
+                            @change="handleTotalChange()" />
                         <small v-if="submitted && !product.serviceCost" class="text-red-500">Cmimi i shërbimit
                             është i
                             domësdoshëm.</small>
                     </div>
                     <div>
-                        <label for="total" class="block font-bold mb-3">Cmimi i shërbimit</label>
+                        <label for="total" class="block font-bold mb-3">Totali</label>
                         <InputText type="number" id="total" v-model.trim="product.total" required="false" autofocus
-                            :invalid="submitted && !product.total" fluid />
+                            :invalid="submitted && !product.total" fluid readonly="readonly"
+                            style="background-color: lightgrey;" />
                         <small v-if="submitted && !product.total" class="text-red-500">Totali
                             është i
                             domësdoshëm.</small>
                     </div>
+                    <div v-if="userId > 0">
+                        <label for="status" class="block font-bold mb-3">Statusi</label>
+                        <Select id="idStatus" v-model="product.idStatus" :options="statuses" optionLabel="name"
+                            optionValue="id" placeholder="Zgjedh statusin" required="true" fluid></Select>
+                        <small v-if="submitted && !product.idStatus" class="text-red-500">
+                            Statusi është i domësdoshëm.
+                        </small>
+                    </div>
+
                 </div>
             </div>
 
@@ -168,7 +194,7 @@
         <Dialog v-model:visible="deleteProductDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
             <div class="flex items-center gap-4">
                 <i class="pi pi-exclamation-triangle !text-3xl" />
-                <span v-if="product">Dëshironi të fshini përdouresin: <b>{{ product.title }}</b>?</span>
+                <span v-if="product">Dëshironi të fshini dërgesën: <b>{{ product.uniqueIdentifier }}</b>?</span>
             </div>
             <template #footer>
                 <Button label="Jo" icon="pi pi-times" text @click="deleteProductDialog = false" />
@@ -192,25 +218,19 @@ onMounted(() => {
     getRoles();
     getClients();
     getShipments();
+    getStatuses();
 });
 
 async function getShipments() {
     const response = await ApiService.get("Shipments/getShipments");
     const shipmentsList = new ApiResponse(response.data.statusCode, response.data.result, '');
     products.value = shipmentsList.result;
-    debugger
 }
 
 async function getClients() {
     const response = await ApiService.get("Shipments/getClients");
     const clientsList = new ApiResponse(response.data.statusCode, response.data.result, '');
     clients.value = clientsList.result;
-}
-
-async function getUsers() {
-    const response = await ApiService.get("Users/getUsers");
-    const usersList = new ApiResponse(response.data.statusCode, response.data.result, '');
-    products.value = usersList.result;
 }
 
 async function getCountries() {
@@ -223,6 +243,7 @@ async function getCities(idCountry) {
     const response = await ApiService.get(`Shipments/getCitiesByCountry?idCountry=${idCountry}`);
     const citiesList = new ApiResponse(response.data.statusCode, response.data.result, '');
     cities.value = citiesList.result;
+    await getPostmans(idCountry);
 }
 async function getRoles() {
     const response = await ApiService.get("Roles/GetRoles");
@@ -230,8 +251,30 @@ async function getRoles() {
     roles.value = rolesList.result;
 }
 
+async function getStatuses() {
+    const response = await ApiService.get("Statuses/GetStatuses");
+    const statusesList = new ApiResponse(response.data.statusCode, response.data.result, '');
+    statuses.value = statusesList.result;
+}
 
-
+async function getPostmans(idCountry) {
+    const response = await ApiService.get(`Users/getPostmans?idCountry=${idCountry}`);
+    const postamnsList = new ApiResponse(response.data.statusCode, response.data.result, '');
+    postmans.value = postamnsList.result;
+}
+function handleTotalChange() {
+    let productPrice = parseFloat(product.value.productPrice);
+    let servicePrice = parseFloat(product.value.serviceCost);
+    product.value.total = productPrice + servicePrice;
+}
+function formatDate(date) {
+    if (!date) return "N/A";
+    const d = new Date(date);
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+}
 const toast = useToast();
 const dt = ref();
 const products = ref();
@@ -243,9 +286,10 @@ const countries = ref({});
 const product = ref({});
 const roles = ref({});
 const cities = ref({});
-
-
+const statuses = ref({});
+const postmans = ref({});
 const selectedProducts = ref();
+
 let userId = 0;
 const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS }
@@ -279,7 +323,8 @@ async function saveProduct() {
         !product.value.productPrice ||
         !product.value.serviceCost ||
         !product.value.total ||
-        !product.value.phoneNumber) {
+        !product.value.phoneNumber ||
+        !product.value.idPostman) {
         return;
     }
 
@@ -295,7 +340,8 @@ async function saveProduct() {
         ProductPrice: parseFloat(product.value.productPrice) || 0,
         ServiceCost: parseFloat(product.value.serviceCost) || 0,
         Total: parseFloat(product.value.total) || 0,
-        PhoneNumber: product.value.phoneNumber
+        PhoneNumber: product.value.phoneNumber,
+        IdPostman: product.value.idPostman
     };
 
     const response = await ApiService.post(userId == 0 ? "Shipments/CreateShipment" : "Shipments/EditShipment", data);
@@ -327,10 +373,10 @@ async function deleteProduct(id) {
     let data = {
         Id: id
     }
-    const response = await ApiService.post("Roles/DeleteRole", data);
+    const response = await ApiService.post("Shipments/DeleteShipment", data);
     const apiResponse = new ApiResponse(response.data.statusCode, response.data.result, '');
     if (apiResponse.statusCode == 0)
-        toast.add({ severity: 'success', summary: 'Sukses', detail: 'Roli është fshirë me sukses', life: 3000 });
+        toast.add({ severity: 'success', summary: 'Sukses', detail: 'Dërgesa është fshirë me sukses', life: 3000 });
     else
         toast.add({ severity: 'warn', summary: 'Gabim', detail: 'Një gabim ka ndodhur!', life: 3000 });
 

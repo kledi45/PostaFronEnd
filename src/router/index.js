@@ -141,6 +141,11 @@ const router = createRouter({
                     path: '/logistics/advancedsearch',
                     name: "advancedsearch",
                     component: () => import("@/views/pages/Logistics/AdvancedSearch.vue")
+                },
+                {
+                    path: '/logistics/reconsaliations',
+                    name: "reconsaliations",
+                    component: () => import("@/views/pages/Logistics/Reconsaliations.vue")
                 }
             ]
         },

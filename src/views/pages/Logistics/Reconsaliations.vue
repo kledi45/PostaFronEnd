@@ -3,7 +3,7 @@
 
         <div class="flex mt-8">
             <div class="card flex flex-col gap-4 w-full">
-                <div class="font-semibold text-xl">Kërkim i avancuar</div>
+                <div class="font-semibold text-xl">Kërkim i barazimeve</div>
                 <div class="flex flex-col md:flex-row gap-4">
                     <div class="flex flex-wrap gap-2 w-full">
                         <label for="shipmentID">ID</label>
@@ -46,11 +46,7 @@
                     </div>
                 </div>
                 <div class="flex flex-col md:flex-row gap-4">
-                    <div class="flex flex-wrap gap-2 w-full">
-                        <label for="status">Statusi</label>
-                        <Select id="status" v-model="status" :options="statuses" optionLabel="name"
-                            placeholder="Zgjedh statusin" class="w-full"></Select>
-                    </div>
+
                     <div class="flex flex-wrap gap-2 w-full">
                         <label for="status">Data prej</label>
                         <DatePicker class="w-full" :showIcon="true" :showButtonBar="true" v-model="calendarFromValue">
@@ -144,6 +140,14 @@ onMounted(() => {
     getStatuses();
 });
 
+const statuses_enum = {
+    Registered: 1,
+    InWarehouse: 2,
+    Started: 3,
+    Done: 4,
+    Refused: 5,
+    Problematic: 6
+}
 async function advancedSearch() {
     const data = {
         IdShipment: filters.value?.id || null,
@@ -151,12 +155,12 @@ async function advancedSearch() {
         IdCountry: contry.value?.id || null,
         IdCity: city.value?.id || null,
         IdClient: selectedAutoValue.value?.id || null,
-        IdStatus: status.value?.id || null,
+        IdStatus: statuses_enum.Done,
         DateFrom: (() => {
             if (calendarFromValue.value) {
                 const date = new Date(calendarFromValue.value);
                 date.setDate(date.getDate() + 1);
-                return date.toISOString(); // Consistent ISO format
+                return date.toISOString();
             }
             return null;
         })(),
@@ -164,21 +168,18 @@ async function advancedSearch() {
             if (calendarToValue.value) {
                 const date = new Date(calendarToValue.value);
                 date.setDate(date.getDate() + 1);
-                return date.toISOString(); // Consistent ISO format
+                return date.toISOString();
             }
             return null;
         })(),
         IdPostman: selectedPostmanAutoValue.value?.id || null
     };
-
     const response = await ApiService.post("Shipments/advancedSearch", data);
     const apiResponse = new ApiResponse(response.data.statusCode, response.data.result, '');
-    if (apiResponse.statusCode == 0) {
+    if (apiResponse.statusCode == 0)
         products.value = apiResponse.result;
-    }
     else
         toast.add({ severity: 'warn', summary: 'Gabim', detail: 'Një gabim ka ndodhur!', life: 3000 });
-
 }
 
 
@@ -209,11 +210,10 @@ async function getStatuses() {
 
 
 async function getCities(idCountry) {
-    debugger
     const response = await ApiService.get(`Shipments/getCitiesByCountry?idCountry=${idCountry}`);
     const citiesList = new ApiResponse(response.data.statusCode, response.data.result, '');
     cities.value = citiesList.result;
-    await getPostmansWithIdCountry(idCountry)
+    await getPostmansWithIdCountry(idCountry);
 }
 async function getClients() {
     const response = await ApiService.get("Shipments/getClients");

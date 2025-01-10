@@ -148,6 +148,12 @@ const model = ref([
                 label: "Kërkim i avancuar",
                 icon: 'pi pi-fw pi-search',
                 to: '/logistics/advancedsearch'
+            },
+            {
+                label: "Barazimet",
+                icon: 'pi pi-fw pi-money-bill',
+                to: '/logistics/reconsaliations'
+
             }
         ]
     },
